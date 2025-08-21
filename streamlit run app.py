@@ -1,8 +1,10 @@
 pandas
 numpy
-matplotlib.pyplot
+matplotlib
 seaborn
 scikit-learn
 imblearn
 streamlit
+
+
 

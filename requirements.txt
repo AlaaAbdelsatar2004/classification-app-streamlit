@@ -4,6 +4,8 @@ matplotlib
 seaborn
 scikit-learn
 streamlit
+imblearn
+
 
 
 

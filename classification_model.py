@@ -10,6 +10,7 @@ from sklearn.preprocessing  import  RobustScaler
 from sklearn.metrics import accuracy_score,classification_report
 from sklearn.preprocessing import LabelEncoder
 from imblearn.over_sampling import SMOTE
+from sklearn.impute import SimpleImputer
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
@@ -142,11 +143,11 @@ if file is not None:
             # if nomina -->  One-Hot Encoding
             if col_type=="Nominal (No order)":
                 st.info("Recommended method: **One-Hot Encoding**")
-                encoded_df = pd.get_dummies(data , columns=[col] , drop_first=False)
+                data = pd.get_dummies(data , columns=[col] , drop_first=False)
                 t_flag = True
                 st.success(f"✅ Applied One-Hot Encoding on {col}")
                 flagy=True
-                st.dataframe(encoded_df.head())
+                st.dataframe(data.head())
             else:
                 st.info("Recommended method: **Label Encoding**")
                 label_encoder = LabelEncoder()
@@ -159,7 +160,7 @@ if file is not None:
             # show final result
             st.write("Final Data After Encoding")
             if col_type =="Nominal (No order)":
-                st.dataframe(encoded_df.head())
+                st.dataframe(data.head())
             else:
                 st.dataframe(data.head())
    
@@ -184,6 +185,10 @@ if file is not None:
                     y = data[target]
                     xtrain, xtest, ytrain, ytest = train_test_split(x, y, test_size=0.2, random_state=42, stratify=y)
                     smote = SMOTE(random_state=42)
+                    xtrain = xtrain.apply(pd.to_numeric, errors='coerce')
+                    nan_indices = xtrain[xtrain.isna().any(axis=1)].index
+                    xtrain = xtrain.drop(nan_indices)
+                    ytrain = ytrain.drop(nan_indices)
                     X_resampled, y_resampled = smote.fit_resample(xtrain , ytrain)
 
                     # show results
@@ -241,9 +246,12 @@ if file is not None:
                 C = st.number_input("c" , 0.0001 , max_value= 100.0)
                 solver = st.selectbox("solver" , options= ["lbfgs" , "sag" ])
                 model  = LogisticRegression(penalty='l1', solver='liblinear', random_state=42)
-
-    
+        
+        
         if t_flag :
+            imputer = SimpleImputer(strategy="most_frequent")
+            xtrain = pd.DataFrame(imputer.fit_transform(xtrain) , columns=xtrain.columns)
+            xtest = pd.DataFrame(imputer.transform(xtest), columns=xtest.columns)
             model.fit(xtrain  , ytrain) 
             ypred = model.predict(xtest) 
 
